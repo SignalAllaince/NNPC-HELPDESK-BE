@@ -168,4 +168,4 @@ if __name__ == "__main__":
     if mode == 'dev':
         app.run(host='0.0.0.0', debug=True)
     else:
-        serve(app, host='0.0.0.0', port = 5000, threads = 2)
+        serve(app, host='0.0.0.0', port = 8000, threads = 2)
