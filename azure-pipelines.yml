@@ -45,15 +45,15 @@ stages:
             artifactName: 'drop'
             downloadPath: '$(System.ArtifactsDirectory)'
             
-        - task: AzureWebApp@1
-          inputs:
-            azureSubscription: '5293d7f2-ede4-4727-b96a-9a8bbd2f6d73'  # Replace with the actual service connection ID
-            appType: 'webAppLinux'
-            appName: 'NNPChatbot'  
-            deployToSlotOrASE: true
-            resourceGroupName: 'ServiceDesk'
-            package: '$(System.ArtifactsDirectory)/$(Build.BuildId).zip'
-            startUpCommand: 'gunicorn --bind=0.0.0.0 --workers=4 startup:app'
+        # - task: AzureWebApp@1
+        #   inputs:
+        #     azureSubscription: '5293d7f2-ede4-4727-b96a-9a8bbd2f6d73'  # Replace with the actual service connection ID
+        #     appType: 'webAppLinux'
+        #     appName: 'NNPChatbot'  
+        #     deployToSlotOrASE: true
+        #     resourceGroupName: 'ServiceDesk'
+        #     package: '$(System.ArtifactsDirectory)/$(Build.BuildId).zip'
+        #     startUpCommand: 'gunicorn --bind=0.0.0.0 --workers=4 startup:app'
 
 
     
