@@ -1,19 +1,37 @@
 trigger:
 - main
 
-pool:
-  vmImage: ubuntu-latest
+variables:
+  # Azure Resource Manager connection created during pipeline creation
+  azureServiceConnectionId: '52b2f512-9f98-4099-8741-8efbad822623'
+
+  # Web app name
+  webAppName: 'NNPChatbot'
+
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+
+  # Environment name
+  environmentName: 'NNPChatbotEnvironment'
+
+  # Project root folder. Point to the folder containing manage.py file.
+  projectRoot: $(System.DefaultWorkingDirectory)
+
+  # Python version: 3.9
+  pythonVersion: '3.9'
 
 stages:
-- stage: Build
+- stage: BuildAndDeploy
   displayName: 'Build and Deploy Stage'
   jobs:
   - job: BuildAndDeployJob
+    pool:
+      vmImage: $(vmImageName)
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: '3.9'
-      displayName: 'Use Python 3.9'
+        versionSpec: '$(pythonVersion)'
+      displayName: 'Use Python $(pythonVersion)'
 
     - script: |
         # Set up virtual environment and install dependencies
@@ -21,25 +39,25 @@ stages:
         source antenv/bin/activate
         python -m pip install --upgrade pip
         pip install -r ./requirements.txt
-      workingDirectory: $(Build.SourcesDirectory)
+      workingDirectory: $(projectRoot)
       displayName: 'Install requirements'
 
     - task: ArchiveFiles@2
       inputs:
-        rootFolderOrFile: '$(Build.SourcesDirectory)'
+        rootFolderOrFile: '$(projectRoot)'
         includeRootFolder: false
-        archiveType: 'zip'
-        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+        archiveType: zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
         replaceExistingArchive: true
       displayName: 'Archive files'
 
     - task: AzureWebApp@1
       inputs:
-        azureSubscription: 'Microsoft Azure Sponsorship_DIGITAL APP'  # Updated subscription name
+        azureSubscription: $(azureServiceConnectionId)
         appType: 'webAppLinux'
-        appName: 'NNPChatbot'  
+        appName: $(webAppName)
         deployToSlotOrASE: true
-        resourceGroupName: 'ServiceDesk'  # Updated resource group name
-        package: '$(System.ArtifactsDirectory)/$(Build.BuildId).zip'
-        startUpCommand: 'gunicorn -b 0.0.0.0:8000 main:app'  # Use gunicorn for production deployment
+        resourceGroupName: 'ServiceDesk'
+        package: $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
+        startUpCommand: 'gunicorn -b 0.0.0.0:8000 main:app'
       displayName: 'Deploy to Azure Web App'
