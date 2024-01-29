@@ -1,43 +1,46 @@
 trigger:
-- Main
+- main
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: ubuntu-latest
 
-strategy:
-  matrix:
-    Python38:
-      pythonVersion: '3.8'
-    Python39:
-      pythonVersion: '3.9'
+stages:
+  - stage: Deploy
+    displayName: 'Deploy Stage'
+    jobs:
+      - job: DeploymentJob
+        displayName: 'Deploy to Azure Web App'
+        steps:
+        - task: UsePythonVersion@0
+          inputs:
+              versionSpec: '3.9'
+          displayName: 'Use Python 3.9'
 
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: $(pythonVersion)
-    addToPath: true
+        - script: |
+              python -m venv antenv
+              source antenv/bin/activate
+              python -m pip install --upgrade pip
+              pip install setup
+              pip install --target="./.python_packages/lib/site-packages" -r ./requirements.txt
+          workingDirectory: $(Build.SourcesDirectory)
+          displayName: "Install requirements"
 
-- script: |
-    python -m venv env
-    source env/bin/activate || exit 1
-    pip install --upgrade pip
-    pip install --no-cache-dir -r requirements.txt
-  displayName: 'Install dependencies'
-
-- task: ArchiveFiles@2
-  inputs:
-    rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
-    includeRootFolder: false
-    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-    replaceExistingArchive: true
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathtoPublish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-    artifactName: 'drop'
-    publishLocation: 'container'
-
-- script: |
-    deactivate
-    rm -rf env
-  displayName: 'Deactivate and cleanup'
+        - task: ArchiveFiles@2
+          inputs:
+            rootFolderOrFile: '$(Build.SourcesDirectory)'
+            includeRootFolder: false
+            archiveType: 'zip'
+            archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+            replaceExistingArchive: true
+        - task: PublishPipelineArtifact@1
+          inputs:
+            targetPath: '$(Build.ArtifactStagingDirectory)'
+            artifactName: 'drop'
+            publishLocation: 'pipeline'
+          
+        - task: DownloadBuildArtifacts@1
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'drop'
+            downloadPath: '$(System.ArtifactsDirectory)
