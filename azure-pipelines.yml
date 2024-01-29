@@ -6,50 +6,40 @@ pool:
 
 stages:
 - stage: Build
-  displayName: Build stage
+  displayName: 'Build and Deploy Stage'
   jobs:
-  - job: BuildJob
+  - job: BuildAndDeployJob
     steps:
-        - task: UsePythonVersion@0
-          inputs:
-              versionSpec: '3.9'
-          displayName: 'Use Python 3.9'
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.9'
+      displayName: 'Use Python 3.9'
 
-        - script: |
-              python -m venv antenv
-              source antenv/bin/activate
-              python -m pip install --upgrade pip
-              pip install setup
-              pip install --target="./.python_packages/lib/site-packages" -r ./requirements.txt
-          workingDirectory: $(Build.SourcesDirectory)
-          displayName: "Install requirements"
+    - script: |
+        # Set up virtual environment and install dependencies
+        python -m venv antenv
+        source antenv/bin/activate
+        python -m pip install --upgrade pip
+        pip install -r ./requirements.txt
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: 'Install requirements'
 
-        - task: ArchiveFiles@2
-          inputs:
-            rootFolderOrFile: '$(Build.SourcesDirectory)'
-            includeRootFolder: false
-            archiveType: 'zip'
-            archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-            replaceExistingArchive: true
-        - task: PublishPipelineArtifact@1
-          inputs:
-            targetPath: '$(Build.ArtifactStagingDirectory)'
-            artifactName: 'drop'
-            publishLocation: 'pipeline'
-          
-        - task: DownloadBuildArtifacts@1
-          inputs:
-            buildType: 'current'
-            downloadType: 'single'
-            artifactName: 'drop'
-            downloadPath: '$(System.ArtifactsDirectory)'
-            
-        - task: AzureWebApp@1
-          inputs:
-            azureSubscription: 'Microsoft Azure Sponsorship_DIGITAL APP'  # Updated subscription name
-            appType: 'webAppLinux'
-            appName: 'NNPChatbot'  
-            deployToSlotOrASE: true
-            resourceGroupName: 'ServiceDesk'  # Updated resource group name
-            package: '$(System.ArtifactsDirectory)/$(Build.BuildId).zip'
-            startUpCommand: 'python -m waitress --host=0.0.0.0 --port=5000 main:app'
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: '$(Build.SourcesDirectory)'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+        replaceExistingArchive: true
+      displayName: 'Archive files'
+
+    - task: AzureWebApp@1
+      inputs:
+        azureSubscription: 'Microsoft Azure Sponsorship_DIGITAL APP'  # Updated subscription name
+        appType: 'webAppLinux'
+        appName: 'NNPChatbot'  
+        deployToSlotOrASE: true
+        resourceGroupName: 'ServiceDesk'  # Updated resource group name
+        package: '$(System.ArtifactsDirectory)/$(Build.BuildId).zip'
+        startUpCommand: 'gunicorn -b 0.0.0.0:8000 main:app'  # Use gunicorn for production deployment
+      displayName: 'Deploy to Azure Web App'
