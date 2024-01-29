@@ -47,12 +47,13 @@ stages:
             
         - task: AzureWebApp@1
           inputs:
-            azureSubscription: 'Microsoft Azure Sponsorship_DIGITAL APP'  # Updated subscription name
+            azureSubscription: '<ServiceConnectionID>'  # Replace with the actual service connection ID
             appType: 'webAppLinux'
             appName: 'NNPChatbot'  
             deployToSlotOrASE: true
-            resourceGroupName: 'ServiceDesk'  # Updated resource group name
+            resourceGroupName: 'ServiceDesk'
             package: '$(System.ArtifactsDirectory)/$(Build.BuildId).zip'
             startUpCommand: 'gunicorn --bind=0.0.0.0 --workers=4 startup:app'
+
 
     
