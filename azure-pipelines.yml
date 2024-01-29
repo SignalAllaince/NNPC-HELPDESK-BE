@@ -49,7 +49,7 @@ stages:
           inputs:
             azureSubscription: 'Microsoft Azure Sponsorship_DIGITAL APP'  # Updated subscription name
             appType: 'webAppLinux'
-            appName: 'NNPChatbot'  # Replace with your desired app name
+            appName: 'NNPChatbot'  
             deployToSlotOrASE: true
             resourceGroupName: 'ServiceDesk'  # Updated resource group name
             package: '$(System.ArtifactsDirectory)/$(Build.BuildId).zip'
