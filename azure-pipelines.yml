@@ -47,7 +47,7 @@ stages:
             
         - task: AzureWebApp@1
           inputs:
-            azureSubscription: '<ServiceConnectionID>'  # Replace with the actual service connection ID
+            azureSubscription: '5293d7f2-ede4-4727-b96a-9a8bbd2f6d73'  # Replace with the actual service connection ID
             appType: 'webAppLinux'
             appName: 'NNPChatbot'  
             deployToSlotOrASE: true
