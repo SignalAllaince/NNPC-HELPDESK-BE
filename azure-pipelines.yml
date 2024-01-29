@@ -8,7 +8,7 @@ trigger:
 
 variables:
   # Azure Resource Manager connection created during pipeline creation
-  azureServiceConnectionId: '52b2f512-9f98-4099-8741-8efbad822623'
+  azureServiceConnectionId: '546c19a6-8cb0-493f-affb-47a027364d4e'
 
   # Web app name
   webAppName: 'NNPChatbot'
