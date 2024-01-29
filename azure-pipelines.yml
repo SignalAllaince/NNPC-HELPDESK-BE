@@ -1,6 +1,25 @@
 trigger:
 - main
 
+variables:
+  # Azure Resource Manager connection created during pipeline creation
+  azureServiceConnectionId: '52b2f512-9f98-4099-8741-8efbad822623'
+
+  # Web app name
+  webAppName: 'NNPChatbot'
+
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+
+  # Environment name
+  environmentName: 'NNPChatbot'
+
+  # Project root folder. Point to the folder containing manage.py file.
+  projectRoot: $(System.DefaultWorkingDirectory)
+
+  # Python version: 3.9
+  pythonVersion: '3.9'
+
 pool:
   vmImage: ubuntu-latest
 
@@ -52,3 +71,4 @@ stages:
                     azureSubscription: $(azureServiceConnectionId)
                     appName: $(webAppName)
                     package: $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
+                    appType: webAppLinux
