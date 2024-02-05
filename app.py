@@ -1,6 +1,7 @@
 from flask import jsonify
 from flask import request, Flask
 from flask_cors import CORS
+import logging
 # from chatbot import generate_response
 from jsondumps import extract_json
 from sendemail import send_email
@@ -18,6 +19,7 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 app.secret_key = os.environ.get("SECRET_KEY")
+logger = logging.getLogger(__name__)
 
 # Set up OpenAI
 openai.api_type = os.environ.get('OPENAI_API_TYPE')
@@ -93,6 +95,7 @@ def generate_response(prompt):
     # assistant_response = response.choices[0].message['content'].strip() if response.choices else ""
     check_response = response["choices"][0]["message"]
     print(check_response)
+    logger.info(f"Check response: {check_response}")
     if check_response.get("function_call"):
         function_name = check_response["function_call"]["name"]
         if function_name == "intelligent_response":
@@ -155,6 +158,7 @@ def openai_chat():
                 "subject": subject,
                 }
                 print(payload)
+                logger.info(f"Payload: {payload}")
                 send_email('Uchenna.Nnamani@nnpcgroup.com', subject, content)
                 # asyncio.run(create_ticket(payload))
                 
@@ -162,6 +166,7 @@ def openai_chat():
         return jsonify({"response": response})
     except Exception as e:
         print(e)
+        logger.exception(e)
         return {"message": "An error occurred."}, 500  # Return a 500 Internal Server Error response  
 # statup python -m waitress --host=0.0.0.0 --port=5000 app:app
 mode = 'production'
