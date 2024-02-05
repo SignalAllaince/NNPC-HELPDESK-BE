@@ -161,7 +161,7 @@ def openai_chat():
     except Exception as e:
         print(e)
         return {"message": "An error occurred."}, 500  # Return a 500 Internal Server Error response  
-
+# statup python -m waitress --host=0.0.0.0 --port=5000 app:app
 mode = 'production'
 
 if __name__ == "__main__":

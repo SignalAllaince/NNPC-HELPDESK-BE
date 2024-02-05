@@ -27,4 +27,4 @@ asyncio==3.4.3
 jsonpatch==1.33
 jsonpointer==2.4
 waitress==2.1.2
-
+gunicorn==21.2.0
