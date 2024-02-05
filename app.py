@@ -1,5 +1,6 @@
 from flask import jsonify
 from flask import request, Flask
+from flask_cors import CORS
 # from chatbot import generate_response
 from jsondumps import extract_json
 from sendemail import send_email
@@ -15,6 +16,7 @@ from hubspot import create_ticket
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 app.secret_key = os.environ.get("SECRET_KEY")
 
 # Set up OpenAI
