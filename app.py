@@ -26,7 +26,7 @@ openai.api_type = os.environ.get('OPENAI_API_TYPE')
 openai.api_base = os.environ.get('OPENAI_API_BASE')
 openai.api_version = os.environ.get('OPENAI_API_VERSION')
 openai.api_key = os.environ.get('OPENAI_API_KEY')
-
+openai.log = 'debug'
 # Initialize an empty conversation with system message
 # conversation = [
 #     {
