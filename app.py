@@ -171,4 +171,4 @@ if __name__ == "__main__":
     elif mode == 'prod':
         serve(app, host='0.0.0.0', threads = 2)
     elif mode == 'production':
-        app.run(host='0.0.0.0', debug=True)
+        app.run(host='0.0.0.0',port=8000, debug=True)
