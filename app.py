@@ -2,7 +2,7 @@ from flask import jsonify
 from flask import request, Flask
 from flask_cors import CORS
 import logging
-# trigger
+# trigger imoit
 # from chatbot import generate_response
 from jsondumps import extract_json
 from sendemail import send_email
