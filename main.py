@@ -1,11 +1,13 @@
 from flask import jsonify
 from flask import request, Flask
+from flask_cors import CORS
+import logging
 # from chatbot import generate_response
 from jsondumps import extract_json
 from sendemail import send_email
 import xml.etree.ElementTree as ET
 import json
-import asyncio
+# import asyncio
 from dotenv import load_dotenv
 import os
 from waitress import serve
@@ -15,14 +17,16 @@ from hubspot import create_ticket
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 app.secret_key = os.environ.get("SECRET_KEY")
+logger = logging.getLogger(__name__)
 
 # Set up OpenAI
 openai.api_type = os.environ.get('OPENAI_API_TYPE')
 openai.api_base = os.environ.get('OPENAI_API_BASE')
 openai.api_version = os.environ.get('OPENAI_API_VERSION')
 openai.api_key = os.environ.get('OPENAI_API_KEY')
-
+openai.log = 'debug'
 # Initialize an empty conversation with system message
 # conversation = [
 #     {
@@ -91,6 +95,7 @@ def generate_response(prompt):
     # assistant_response = response.choices[0].message['content'].strip() if response.choices else ""
     check_response = response["choices"][0]["message"]
     print(check_response)
+    logger.info(f"Check response: {check_response}")
     if check_response.get("function_call"):
         function_name = check_response["function_call"]["name"]
         if function_name == "intelligent_response":
@@ -153,19 +158,24 @@ def openai_chat():
                 "subject": subject,
                 }
                 print(payload)
-                send_email('unnamani@saconsulting.ai', subject, content)
+                logger.info(f"Payload: {payload}")
+                send_email('Uchenna.Nnamani@nnpcgroup.com', subject, content)
                 # asyncio.run(create_ticket(payload))
                 
                 return jsonify({'message': 'Your service request has been logged to the service desk successfully'})
         return jsonify({"response": response})
     except Exception as e:
         print(e)
+        logger.exception(e)
         return {"message": "An error occurred."}, 500  # Return a 500 Internal Server Error response  
-
-mode = 'prod'
+# statup python -m waitress --host=0.0.0.0 --port=5000 app:app
+mode = 'production'
 
 if __name__ == "__main__":
+    app.run(host='0.0.0.0', debug=True)
     if mode == 'dev':
         app.run(host='0.0.0.0', debug=True)
-    else:
-        serve(app, host='0.0.0.0', port = 8000, threads = 2)
+    elif mode == 'prod':
+        serve(app, host='0.0.0.0', threads = 2)
+    elif mode == 'production':
+        app.run(host='0.0.0.0',port=8000, debug=True)
