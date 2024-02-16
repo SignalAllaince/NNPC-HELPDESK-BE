@@ -3,7 +3,7 @@ from flask import request, Flask
 from flask_cors import CORS
 import logging
 # from chatbot import generate_response
-# trigger
+# trigger NEW
 from jsondumps import extract_json
 from sendemail import send_email
 import xml.etree.ElementTree as ET
