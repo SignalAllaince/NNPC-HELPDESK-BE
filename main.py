@@ -1,14 +1,16 @@
-from flask import jsonify
-from flask import request, Flask
+from flask import request, Flask, session, jsonify
 from flask_cors import CORS
 import logging
+import uuid
 # from chatbot import generate_response
 # trigger NEW
 from jsondumps import extract_json
 from sendemail import send_email
 import xml.etree.ElementTree as ET
 import json
+from datetime import datetime, timedelta
 # import asyncio
+from pytz import utc
 from dotenv import load_dotenv
 import os
 from waitress import serve
@@ -28,15 +30,9 @@ openai.api_base = os.environ.get('OPENAI_API_BASE')
 openai.api_version = os.environ.get('OPENAI_API_VERSION')
 openai.api_key = os.environ.get('OPENAI_API_KEY')
 openai.log = 'debug'
-# Initialize an empty conversation with system message
-# conversation = [
-#     {
-#         "role": "system",
-#         "content": "You are a service desk assistant named Rukky, you always introduce yourself at the beginning of the conversation. If you are asked about the solution to a technical problem with a computer, you should check if the solution is in your knowledge base but if it is does not solve user problems call the function 'is_solution_in_pdf' that checks available pdfs for solutions. If the problem is one that user cant solve after the help provvided ask them if they want to log it to service desk. If user agrees to log it into service desk call the function to create ticket in service with details of the problem previously mentioned in the conversation. After running this function end the conversation by saying 'Thank you for contacting the service desk, have a nice day'. If user says no just end the conversation by saying 'Thank you for contacting the service desk, have a nice day'", 
-#     }
-# ]
-# 8. Search knowledge base by calling the function 'intelligent response' after user provides relevant prompt.
-#                 9. Close session if information provided resolved the incident for the user by saying - I am happy I could help, have a great day!
+
+# Session expiration time in seconds
+SESSION_EXPIRATION_TIME = 3600
 name = "Uchenna Nnamani"
 content = f'''
                 2. You introduce yourself at the beginning of the conversation like this - 'Hello {name}, I am the NNPC service desk assistant, do you need technical information or something else?' You must mention the users' name which is {name} and always start conversation with this .
@@ -50,7 +46,8 @@ content = f'''
                 10. If service request in 6: Ask for details of service request which are service description of problem as content.
                 12. After user responds, ask the user if they would like to escalate the information to a service request.
                 13. If user decides to escalate, generate details of service request from prior interaction such as: subject of request and description of problem as content and display it to the user in this format ' Subject: '', Content: '' ' as the details of their escalated ticket.
-                14. If user responds, end the conversation with 'I am happy I could help, have a great day!'
+                14. If user responds, end the conversation with 'I am happy I could help, have a great day!
+                15. The contact person's email if ever needed is helpdesk@nnpcgroup.com
                 
                 '''
 conversation = [
@@ -59,6 +56,7 @@ conversation = [
         "content": content
     }
 ]
+
 def generate_response(prompt):
     global conversation  # Access the global conversation variable
     conversation.append({"role": "user", "content": prompt})
@@ -121,12 +119,94 @@ def generate_response(prompt):
         assistant_response = response.choices[0].message['content'].strip() if response.choices else ""
         conversation.append({"role": "assistant", "content": assistant_response})
         return assistant_response
-    
+
+@app.before_request
+def before_request():
+    session.permanent = True
+    app.permanent_session_lifetime = timedelta(seconds=SESSION_EXPIRATION_TIME)
+    session.modified = True
+    last_interaction_time = session.get('last_interaction_time')
+
+    if last_interaction_time:
+        # Convert last_interaction_time to UTC timezone (aware datetime object)
+        last_interaction_time = last_interaction_time.replace(tzinfo=utc)
+
+        # Get current time in UTC timezone (aware datetime object)
+        current_time = datetime.now(utc)
+
+        if current_time - last_interaction_time > timedelta(seconds=SESSION_EXPIRATION_TIME):
+            session.clear()
+
+            # Clear conversation history when session expires
+            global conversation
+            name = "Uchenna Nnamani"
+            content = f'''
+                            2. You introduce yourself at the beginning of the conversation like this - 'Hello {name}, I am the NNPC service desk assistant, do you need technical information or something else?' You must mention the users' name which is {name} and always start conversation with this .
+                            3. If user chooses technical information in 2: Ask what information is needed.
+                            4. Search for required information after user inputs a relevant prompt by calling the function 'intelligent_response'.
+                            5. Where information is not in knowledge base, tell user I am sorry but I do not currently have information regarding your inquiry.
+                            6. If user chooses something else in 2, Ask if it is a service request or an incident.
+                            7. If user responds with incident: Ask details of incident.
+                            8. After user responds, ask the user if they would like to escalate the incident to a service request.
+                            9. If user decides to escalate, generate details of service request from prior interaction such as: subject of request and description of problem as content and display it to the user in this format ' Subject: '', Content: '' ' as the details of their escalated ticket.
+                            10. If service request in 6: Ask for details of service request which are service description of problem as content.
+                            12. After user responds, ask the user if they would like to escalate the information to a service request.
+                            13. If user decides to escalate, generate details of service request from prior interaction such as: subject of request and description of problem as content and display it to the user in this format ' Subject: '', Content: '' ' as the details of their escalated ticket.
+                            14. If user responds, end the conversation with 'I am happy I could help, have a great day!
+                            15. The contact person's email if ever needed is helpdesk@nnpcgroup.com
+                            
+                            '''
+            conversation = [
+                {
+                    "role": "system",
+                    "content": content
+                }
+            ]
+            
 @app.route('/bot', methods=['POST'])
 def openai_chat():
     try:
+        session_id = session.get('session_id')  # Get session ID
+        email = request.headers.get('email')
+        # name = request.headers.get('name')
+        # print(name)
+
+        if 'email' in session and session['email'] != email:
+            session.clear()  # Clear session if email changes
+            session_id = str(uuid.uuid4())  # Generate new session ID
+            global conversation
+            name = "Uchenna Nnamani"
+            content = f'''
+                            2. You introduce yourself at the beginning of the conversation like this - 'Hello {name}, I am the NNPC service desk assistant, do you need technical information or something else?' You must mention the users' name which is {name} and always start conversation with this .
+                            3. If user chooses technical information in 2: Ask what information is needed.
+                            4. Search for required information after user inputs a relevant prompt by calling the function 'intelligent_response'.
+                            5. Where information is not in knowledge base, tell user I am sorry but I do not currently have information regarding your inquiry.
+                            6. If user chooses something else in 2, Ask if it is a service request or an incident.
+                            7. If user responds with incident: Ask details of incident.
+                            8. After user responds, ask the user if they would like to escalate the incident to a service request.
+                            9. If user decides to escalate, generate details of service request from prior interaction such as: subject of request and description of problem as content and display it to the user in this format ' Subject: '', Content: '' ' as the details of their escalated ticket.
+                            10. If service request in 6: Ask for details of service request which are service description of problem as content.
+                            12. After user responds, ask the user if they would like to escalate the information to a service request.
+                            13. If user decides to escalate, generate details of service request from prior interaction such as: subject of request and description of problem as content and display it to the user in this format ' Subject: '', Content: '' ' as the details of their escalated ticket.
+                            14. If user responds, end the conversation with 'I am happy I could help, have a great day!
+                            15. The contact person's email if ever needed is helpdesk@nnpcgroup.com
+                            
+                            '''
+            conversation = [
+                {
+                    "role": "system",
+                    "content": content
+                }
+            ]
+
+        session['session_id'] = session_id  # Store session ID in session
+        session['email'] = email  # Store email in session
+        session['last_interaction_time'] = datetime.now()  # Update last interaction time
+        print(session)
+
         data = request.data
         user_input = None
+        email = request.headers.get('email')
         content_type = request.headers.get('Content-Type')
 
         if content_type == 'application/json':
@@ -160,7 +240,7 @@ def openai_chat():
                 }
                 print(payload)
                 logger.info(f"Payload: {payload}")
-                send_email('Uchenna.Nnamani@nnpcgroup.com', subject, content)
+                send_email(email, subject, content)
                 # asyncio.run(create_ticket(payload))
                 
                 return jsonify({'message': 'Your service request has been logged to the service desk successfully'})
@@ -168,7 +248,7 @@ def openai_chat():
     except Exception as e:
         print(e)
         logger.exception(e)
-        return {"message": "An error occurred."}, 500  # Return a 500 Internal Server Error response  
+        return {"message": "Please check your internet connection and try sending your request again."}, 500  # Return a 500 Internal Server Error response  
 # statup python -m waitress --host=0.0.0.0 --port=5000 app:app
 mode = 'production'
 

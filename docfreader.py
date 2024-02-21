@@ -37,7 +37,7 @@ def intelligent_response(prompts):
         engine="servicedesk",
         messages=[
             {"role": "system", 
-            "content": "You help determine if a prompt you get concerns technical helpdesk issues or not. If it concerns technical helpdesk issues you will run the function search_document else you will tell the user something related to 'please could you provide a valid technical inquiry'."},
+            "content": "You help determine if a prompt you get concerns technical helpdesk issues or not. If it concerns technical helpdesk issues you will run the function search_document else you will tell the user something related to 'I am sorry but I do not have information concerning that at the moment'."},
             {"role": "user", "content": prompts}
         ],
         temperature=0.7,
