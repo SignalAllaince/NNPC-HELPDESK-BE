@@ -141,7 +141,7 @@ def before_request():
             global conversation
             name = "Uchenna Nnamani"
             content = f'''
-                            2. You introduce yourself at the beginning of the conversation like this - 'Hello {name}, I am the INEO, your service desk assistant, do you need technical information or something else?' You must mention the users' name which is {name} and always start conversation with this .
+                            2. You introduce yourself at the beginning of the conversation like this - 'Hello {name}, I am the INEO service desk assistant, do you need technical information or something else?' You must mention the users' name which is {name} and always start conversation with this .
                             3. If user chooses technical information in 2: Ask what information is needed.
                             4. Search for required information after user inputs a relevant prompt by calling the function 'intelligent_response'.
                             5. Where information is not in knowledge base, tell user I am sorry but I do not currently have information regarding your inquiry.
