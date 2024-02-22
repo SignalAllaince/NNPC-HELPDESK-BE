@@ -1,5 +1,6 @@
 import requests
 import jwt
+from flask import jsonify
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
@@ -69,10 +70,9 @@ def send_email(sender_email, subject, content):
 
     response = requests.post(graph_api_url, headers=headers, json=email_data)
     if response.status_code == 202:
-        return "Email sent successfully"
+        return jsonify({'response': 'Your service request has been logged to the service desk successfully'})
     else:
-        return f"Email could not be sent. Status Code: {response.status_code}", response.text
-        # print(response.text)
-
+        return jsonify({"response": 'Your service request could not be logged to the servicedesk'})
+        print(response.text)
 # Call the function to send the email
-send_email('nnamaniuchenna8@gmail.com','test - I need help with my account', 'Uchenna Nnamani')
+# send_email('nnamaniuchenna8@gmail.com','test - I need help with my account', 'Uchenna Nnamani')
