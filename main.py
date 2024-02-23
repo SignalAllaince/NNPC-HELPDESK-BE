@@ -33,9 +33,10 @@ openai.log = 'debug'
 
 # Session expiration time in seconds
 SESSION_EXPIRATION_TIME = 3600
-name = "Uchenna Nnamani"
+# uname = request.headers.get('uname')
+uname = 'Uchenna Nnamani'
 content = f'''
-                2. You introduce yourself at the beginning of the conversation like this - 'Hello {name}, I am the INEO service desk assistant, do you need technical information or something else?' You must mention the users' name which is {name} and always start conversation with this .
+                2. You introduce yourself at the beginning of the conversation like this - 'Hello {uname}, I am the INEO service desk assistant, do you need technical information or something else?' You must mention the users' name which is {uname} and always start conversation with this .
                 3. If user chooses technical information in 2: Ask what information is needed.
                 4. Search for required information after user inputs a relevant prompt by calling the function 'intelligent_response'.
                 5. Where information is not in knowledge base, tell user I am sorry but I do not currently have information regarding your inquiry.
@@ -65,7 +66,7 @@ def generate_response(prompt):
     response = openai.ChatCompletion.create(
         engine="servicedesk",
         messages=conversation,
-        temperature=0.7,
+        temperature=0.1,
         functions=[
         {
             #function to check if the solution is within available documents
@@ -136,12 +137,11 @@ def before_request():
 
         if current_time - last_interaction_time > timedelta(seconds=SESSION_EXPIRATION_TIME):
             session.clear()
-
+            uname = request.headers.get('uname')
             # Clear conversation history when session expires
             global conversation
-            name = "Uchenna Nnamani"
             content = f'''
-                            2. You introduce yourself at the beginning of the conversation like this - 'Hello {name}, I am the INEO service desk assistant, do you need technical information or something else?' You must mention the users' name which is {name} and always start conversation with this .
+                            2. You introduce yourself at the beginning of the conversation like this - 'Hello {uname}, I am the INEO service desk assistant, do you need technical information or something else?' You must mention the users' name which is {uname} and always start conversation with this .
                             3. If user chooses technical information in 2: Ask what information is needed.
                             4. Search for required information after user inputs a relevant prompt by calling the function 'intelligent_response'.
                             5. Where information is not in knowledge base, tell user I am sorry but I do not currently have information regarding your inquiry.
@@ -175,9 +175,9 @@ def openai_chat():
             session.clear()  # Clear session if email changes
             session_id = str(uuid.uuid4())  # Generate new session ID
             global conversation
-            name = "Uchenna Nnamani"
+            uname = request.headers.get('uname')
             content = f'''
-                            2. You introduce yourself at the beginning of the conversation like this - 'Hello {name}, I am the INEO service desk assistant, do you need technical information or something else?' You must mention the users' name which is {name} and always start conversation with this .
+                            2. You introduce yourself at the beginning of the conversation like this - 'Hello {uname}, I am the INEO service desk assistant, do you need technical information or something else?' You must mention the users' name which is {uname} and always start conversation with this .
                             3. If user chooses technical information in 2: Ask what information is needed.
                             4. Search for required information after user inputs a relevant prompt by calling the function 'intelligent_response'.
                             5. Where information is not in knowledge base, tell user I am sorry but I do not currently have information regarding your inquiry.
