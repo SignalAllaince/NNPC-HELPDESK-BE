@@ -244,12 +244,12 @@ def openai_chat():
                 send_email(email, subject, content)
                 # asyncio.run(create_ticket(payload))
                 
-                return jsonify({'message': 'Your service request has been logged to the service desk successfully'})
+                return jsonify({'response': 'Your service request has been logged to the service desk successfully'})
         return jsonify({"response": response})
     except Exception as e:
         print(e)
         logger.exception(e)
-        return {"message": "Please check your internet connection and try sending your request again."}, 500  # Return a 500 Internal Server Error response  
+        return {"response": "Please check your internet connection and try sending your request again."}, 500  # Return a 500 Internal Server Error response  
 # statup python -m waitress --host=0.0.0.0 --port=5000 app:app
 mode = 'production'
 
