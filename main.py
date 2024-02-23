@@ -122,88 +122,88 @@ def generate_response(prompt):
         conversation.append({"role": "assistant", "content": assistant_response})
         return assistant_response
 
-@app.before_request
-def before_request():
-    session.permanent = True
-    app.permanent_session_lifetime = timedelta(seconds=SESSION_EXPIRATION_TIME)
-    session.modified = True
-    last_interaction_time = session.get('last_interaction_time')
+# @app.before_request
+# def before_request():
+#     session.permanent = True
+#     app.permanent_session_lifetime = timedelta(seconds=SESSION_EXPIRATION_TIME)
+#     session.modified = True
+#     last_interaction_time = session.get('last_interaction_time')
 
-    if last_interaction_time:
-        # Convert last_interaction_time to UTC timezone (aware datetime object)
-        last_interaction_time = last_interaction_time.replace(tzinfo=utc)
+#     if last_interaction_time:
+#         # Convert last_interaction_time to UTC timezone (aware datetime object)
+#         last_interaction_time = last_interaction_time.replace(tzinfo=utc)
 
-        # Get current time in UTC timezone (aware datetime object)
-        current_time = datetime.now(utc)
+#         # Get current time in UTC timezone (aware datetime object)
+#         current_time = datetime.now(utc)
 
-        if current_time - last_interaction_time > timedelta(seconds=SESSION_EXPIRATION_TIME):
-            session.clear()
-            uname = request.headers.get('uname')
-            # Clear conversation history when session expires
-            global conversation
-            content = f'''
-                            2. You introduce yourself at the beginning of the conversation like this - 'Hello {uname}, I am the INEO service desk assistant, do you need technical information or something else?' You must mention the users' name which is {uname} and always start conversation with this .
-                            3. If user chooses technical information in 2: Ask what information is needed.
-                            4. Search for required information after user inputs a relevant prompt by calling the function 'intelligent_response'.
-                            5. Where information is not in knowledge base, tell user I am sorry but I do not currently have information regarding your inquiry.
-                            6. If user chooses something else in 2, Ask if it is a service request or an incident.
-                            7. If user responds with incident: Ask details of incident.
-                            8. After user responds, ask the user if they would like to escalate the incident to a service request.
-                            9. If user decides to escalate, generate details of service request from prior interaction such as: subject of request and description of problem as content and display it to the user in this format ' Subject: '', Content: '' ' as the details of their escalated ticket.
-                            10. If service request in 6: Ask for details of service request which are service description of problem as content.
-                            12. After user responds, ask the user if they would like to escalate the information to a service request.
-                            13. If user decides to escalate, generate details of service request from prior interaction such as: subject of request and description of problem as content and display it to the user in this format ' Subject: '', Content: '' ' as the details of their escalated ticket.
-                            14. If user responds, end the conversation with 'I am happy I could help, have a great day!
-                            15. The contact person's email if ever needed is helpdesk@nnpcgroup.com
+#         if current_time - last_interaction_time > timedelta(seconds=SESSION_EXPIRATION_TIME):
+#             session.clear()
+#             uname = request.headers.get('uname')
+#             # Clear conversation history when session expires
+#             global conversation
+#             content = f'''
+#                             2. You introduce yourself at the beginning of the conversation like this - 'Hello {uname}, I am the INEO service desk assistant, do you need technical information or something else?' You must mention the users' name which is {uname} and always start conversation with this .
+#                             3. If user chooses technical information in 2: Ask what information is needed.
+#                             4. Search for required information after user inputs a relevant prompt by calling the function 'intelligent_response'.
+#                             5. Where information is not in knowledge base, tell user I am sorry but I do not currently have information regarding your inquiry.
+#                             6. If user chooses something else in 2, Ask if it is a service request or an incident.
+#                             7. If user responds with incident: Ask details of incident.
+#                             8. After user responds, ask the user if they would like to escalate the incident to a service request.
+#                             9. If user decides to escalate, generate details of service request from prior interaction such as: subject of request and description of problem as content and display it to the user in this format ' Subject: '', Content: '' ' as the details of their escalated ticket.
+#                             10. If service request in 6: Ask for details of service request which are service description of problem as content.
+#                             12. After user responds, ask the user if they would like to escalate the information to a service request.
+#                             13. If user decides to escalate, generate details of service request from prior interaction such as: subject of request and description of problem as content and display it to the user in this format ' Subject: '', Content: '' ' as the details of their escalated ticket.
+#                             14. If user responds, end the conversation with 'I am happy I could help, have a great day!
+#                             15. The contact person's email if ever needed is helpdesk@nnpcgroup.com
                             
-                            '''
-            conversation = [
-                {
-                    "role": "system",
-                    "content": content
-                }
-            ]
+#                             '''
+#             conversation = [
+#                 {
+#                     "role": "system",
+#                     "content": content
+#                 }
+#             ]
             
 @app.route('/bot', methods=['POST'])
 def openai_chat():
     try:
-        session_id = session.get('session_id')  # Get session ID
+        # session_id = session.get('session_id')  # Get session ID
         email = request.headers.get('email')
-        # name = request.headers.get('name')
-        # print(name)
+        # # name = request.headers.get('name')
+        # # print(name)
 
-        if 'email' in session and session['email'] != email:
-            session.clear()  # Clear session if email changes
-            session_id = str(uuid.uuid4())  # Generate new session ID
-            global conversation
-            uname = request.headers.get('uname')
-            content = f'''
-                            2. You introduce yourself at the beginning of the conversation like this - 'Hello {uname}, I am the INEO service desk assistant, do you need technical information or something else?' You must mention the users' name which is {uname} and always start conversation with this .
-                            3. If user chooses technical information in 2: Ask what information is needed.
-                            4. Search for required information after user inputs a relevant prompt by calling the function 'intelligent_response'.
-                            5. Where information is not in knowledge base, tell user I am sorry but I do not currently have information regarding your inquiry.
-                            6. If user chooses something else in 2, Ask if it is a service request or an incident.
-                            7. If user responds with incident: Ask details of incident.
-                            8. After user responds, ask the user if they would like to escalate the incident to a service request.
-                            9. If user decides to escalate, generate details of service request from prior interaction such as: subject of request and description of problem as content and display it to the user in this format ' Subject: '', Content: '' ' as the details of their escalated ticket.
-                            10. If service request in 6: Ask for details of service request which are service description of problem as content.
-                            12. After user responds, ask the user if they would like to escalate the information to a service request.
-                            13. If user decides to escalate, generate details of service request from prior interaction such as: subject of request and description of problem as content and display it to the user in this format ' Subject: '', Content: '' ' as the details of their escalated ticket.
-                            14. If user responds, end the conversation with 'I am happy I could help, have a great day!
-                            15. The contact person's email if ever needed is helpdesk@nnpcgroup.com
+        # if 'email' in session and session['email'] != email:
+        #     session.clear()  # Clear session if email changes
+        #     session_id = str(uuid.uuid4())  # Generate new session ID
+        #     global conversation
+        #     uname = request.headers.get('uname')
+        #     content = f'''
+        #                     2. You introduce yourself at the beginning of the conversation like this - 'Hello {uname}, I am the INEO service desk assistant, do you need technical information or something else?' You must mention the users' name which is {uname} and always start conversation with this .
+        #                     3. If user chooses technical information in 2: Ask what information is needed.
+        #                     4. Search for required information after user inputs a relevant prompt by calling the function 'intelligent_response'.
+        #                     5. Where information is not in knowledge base, tell user I am sorry but I do not currently have information regarding your inquiry.
+        #                     6. If user chooses something else in 2, Ask if it is a service request or an incident.
+        #                     7. If user responds with incident: Ask details of incident.
+        #                     8. After user responds, ask the user if they would like to escalate the incident to a service request.
+        #                     9. If user decides to escalate, generate details of service request from prior interaction such as: subject of request and description of problem as content and display it to the user in this format ' Subject: '', Content: '' ' as the details of their escalated ticket.
+        #                     10. If service request in 6: Ask for details of service request which are service description of problem as content.
+        #                     12. After user responds, ask the user if they would like to escalate the information to a service request.
+        #                     13. If user decides to escalate, generate details of service request from prior interaction such as: subject of request and description of problem as content and display it to the user in this format ' Subject: '', Content: '' ' as the details of their escalated ticket.
+        #                     14. If user responds, end the conversation with 'I am happy I could help, have a great day!
+        #                     15. The contact person's email if ever needed is helpdesk@nnpcgroup.com
                             
-                            '''
-            conversation = [
-                {
-                    "role": "system",
-                    "content": content
-                }
-            ]
+        #                     '''
+        #     conversation = [
+        #         {
+        #             "role": "system",
+        #             "content": content
+        #         }
+        #     ]
 
-        session['session_id'] = session_id  # Store session ID in session
-        session['email'] = email  # Store email in session
-        session['last_interaction_time'] = datetime.now()  # Update last interaction time
-        print(session)
+        # session['session_id'] = session_id  # Store session ID in session
+        # session['email'] = email  # Store email in session
+        # session['last_interaction_time'] = datetime.now()  # Update last interaction time
+        # print(session)
 
         data = request.data
         user_input = None
