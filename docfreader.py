@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 import openai
 import json
-
+#though the function is not used in this file, it is used in the sendemail.py file
 load_dotenv()
 
 openai.api_type = os.environ.get('OPENAI_API_TYPE')

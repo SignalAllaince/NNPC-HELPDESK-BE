@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 import json
 from datetime import datetime, timedelta
 # import asyncio
+#though the function is not used in this file, it is used in the sendemail.py file
 from pytz import utc
 from dotenv import load_dotenv
 import os

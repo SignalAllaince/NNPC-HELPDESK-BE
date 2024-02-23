@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from dotenv import load_dotenv
-
+#though the function is not used in this file, it is used in the sendemail.py file
 load_dotenv()
 
 def send_email(sender_email, subject, content):

@@ -1,7 +1,7 @@
 import aiohttp
 # import asyncio
 from flask import Flask, request, jsonify
-
+#though the function is not used in this file, it is used in the sendemail.py file
 app = Flask(__name__)
 
 HUBSPOT_API_KEY = 'pat-eu1-df67527e-714a-4eb5-ba74-b2fa20d58664'

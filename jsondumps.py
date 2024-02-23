@@ -1,6 +1,6 @@
 import re
 import json
-
+#though the function is not used in this file, it is used in the sendemail.py file
 def extract_json(input_text):
     # Define regular expressions to extract information
     patterns = {
